@@ -34,12 +34,12 @@ import jakarta.validation.Valid;
 public class UserJpaController {
 
 	//
-	private UserRepository repository;
+	private UserRepository userRepo;
 	private PostRepository postRepo;
 
-	public UserJpaController(UserRepository repository, PostRepository postRepo) {
+	public UserJpaController(UserRepository userRepo, PostRepository postRepo) {
 		super();
-		this.repository = repository;
+		this.userRepo = userRepo;
 		this.postRepo = postRepo;
 	}
 
@@ -48,7 +48,7 @@ public class UserJpaController {
 	//@Operation(summary = "Obtener todos los usuarios", description = "Retorna una lista con todos los usuarios")
 	public List<User> retrieveAllUsers() {
 		
-		return repository.findAll();
+		return userRepo.findAll();
 		
 	}
 	
@@ -57,7 +57,7 @@ public class UserJpaController {
 	//@Operation(summary = "Obtener datos de un usuario", description = "Retorna los datos del usuario a partir del ID proporcionado")
 	public EntityModel<User> retrieveUser(@PathVariable int id) {
 		
-		Optional<User> userOpt = repository.findById(id);
+		Optional<User> userOpt = userRepo.findById(id);
 		
 		if (userOpt.isEmpty())
 			throw new UserNotFoundException("id: " + String.valueOf(id));
@@ -87,7 +87,7 @@ public class UserJpaController {
 	//@Operation(summary = "Creacion de usuario", description = "Crea un usuario a partir de los datos proporcionados")
 	public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
 		
-		User savedUser = repository.save(user);
+		User savedUser = userRepo.save(user);
 		
 		URI location = ServletUriComponentsBuilder.fromCurrentRequest()
 						.path("/{id}")
@@ -105,7 +105,7 @@ public class UserJpaController {
 	//@Operation(summary = "Eliminar usuario", description = "Elimina un usuario a partir del ID proporcionado")
 	public void deleteUser(@PathVariable int id) {
 		
-		repository.deleteById(id);
+		userRepo.deleteById(id);
 		
 	}
 	
@@ -113,7 +113,7 @@ public class UserJpaController {
 	@GetMapping("/users/{id}/posts")
 	public List<Post> retrievePostsForUser(@PathVariable int id) {
 		
-		Optional<User> userOpt = repository.findById(id);
+		Optional<User> userOpt = userRepo.findById(id);
 		
 		if (userOpt.isEmpty())
 			throw new UserNotFoundException("id: " + id);
@@ -135,7 +135,7 @@ public class UserJpaController {
 		List<Post> listaPost = new ArrayList<Post>();
 		
 		// Obtenemos el usuario a partir del id 
-		Optional<User> userOpt = repository.findById(id);
+		Optional<User> userOpt = userRepo.findById(id);
 		if (userOpt.isEmpty())
 			throw new UserNotFoundException("id: " + id);
 		User user = userOpt.get();
