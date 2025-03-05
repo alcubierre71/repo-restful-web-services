@@ -4,6 +4,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +24,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.in28minutes.restfulwebservices.entity.Post;
 import com.in28minutes.restfulwebservices.entity.User;
 import com.in28minutes.restfulwebservices.exception.UserNotFoundException;
+import com.in28minutes.restfulwebservices.repo.PostRepository;
 import com.in28minutes.restfulwebservices.repo.UserRepository;
 
 import jakarta.validation.Valid;
@@ -33,10 +35,12 @@ public class UserJpaController {
 
 	//
 	private UserRepository repository;
+	private PostRepository postRepo;
 
-	public UserJpaController(UserRepository repository) {
+	public UserJpaController(UserRepository repository, PostRepository postRepo) {
 		super();
 		this.repository = repository;
+		this.postRepo = postRepo;
 	}
 
 	// GET /users 
@@ -119,6 +123,43 @@ public class UserJpaController {
 		List<Post> listPost = user.getPosts();
 		
 		return listPost;
+		
+	}
+	
+	// Creacion de Post para un Usuario determinado
+	// El Usuario se envia en la URL y el Post se pasa en el RequestBody
+	@PostMapping("/users/{id}/posts")
+	//@Operation(summary = "Creacion de Post de usuario", description = "Crea un Post para un Usuario concreto a partir de los datos proporcionados")
+	public ResponseEntity<Object> createPostForUser(@PathVariable int id, @Valid @RequestBody Post post) {
+		
+		List<Post> listaPost = new ArrayList<Post>();
+		
+		// Obtenemos el usuario a partir del id 
+		Optional<User> userOpt = repository.findById(id);
+		if (userOpt.isEmpty())
+			throw new UserNotFoundException("id: " + id);
+		User user = userOpt.get();
+		
+		// Añadimos el Usuario al objeto Post
+		post.setUser(user);
+		
+		Post savedPost = postRepo.save(post);
+		
+		// Recuperamos la lista actualizada de Post del usuario
+		listaPost = user.getPosts();
+		
+		// Creamos una URL que apunte al endpoint de obtencion del Post que acabamos de crear
+		// CurrentRequest ---> /jpa/users/{id}/posts
+		// Path /{id}     ---> /jpa/users/{id}/posts/{id}
+		URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+				.path("/{id}")
+				.buildAndExpand(savedPost.getId())
+				.toUri();
+
+		// En la entidad de respuesta almacenamos la URL que hemos creado
+		ResponseEntity re = ResponseEntity.created(location).build();
+
+		return re;
 		
 	}
 	
