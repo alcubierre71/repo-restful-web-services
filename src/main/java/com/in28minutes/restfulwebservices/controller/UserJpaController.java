@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.in28minutes.restfulwebservices.entity.Post;
 import com.in28minutes.restfulwebservices.entity.User;
 import com.in28minutes.restfulwebservices.exception.UserNotFoundException;
 import com.in28minutes.restfulwebservices.repo.UserRepository;
@@ -104,6 +105,21 @@ public class UserJpaController {
 		
 	}
 	
-	
+	// Obtener listado de Post asociados a un Usuario
+	@GetMapping("/users/{id}/posts")
+	public List<Post> retrievePostsForUser(@PathVariable int id) {
+		
+		Optional<User> userOpt = repository.findById(id);
+		
+		if (userOpt.isEmpty())
+			throw new UserNotFoundException("id: " + id);
+		
+		User user = userOpt.get();
+		
+		List<Post> listPost = user.getPosts();
+		
+		return listPost;
+		
+	}
 	
 }
